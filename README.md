@@ -194,10 +194,6 @@ docs/                    SPEC.md · schema.md · integrations.md
 - Semantic search across run history
 - Pluggable storage backends for team deployments
 
-## Name
-
-*Traceglass* is a working name. Check GitHub, package registries, domains and trademarks before publishing under it.
-
 ## License
 
 [Apache-2.0](LICENSE)
