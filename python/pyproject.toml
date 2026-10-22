@@ -1,0 +1,40 @@
+[build-system]
+requires = ["hatchling>=1.21"]
+build-backend = "hatchling.build"
+
+[project]
+name = "traceglass"
+version = "0.1.0"
+description = "A visual, navigable record of how an AI agent arrived at an answer."
+readme = "README.md"
+requires-python = ">=3.9"
+license = { text = "Apache-2.0" }
+keywords = ["agents", "llm", "observability", "visualization", "provenance", "tracing"]
+classifiers = [
+  "Development Status :: 3 - Alpha",
+  "Intended Audience :: Developers",
+  "License :: OSI Approved :: Apache Software License",
+  "Programming Language :: Python :: 3",
+  "Topic :: Software Development :: Debuggers",
+  "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
+# The core is deliberately dependency-free: recorder, store, server and CLI use only the stdlib.
+dependencies = []
+
+[project.optional-dependencies]
+langchain = ["langchain-core>=0.2"]
+anthropic = ["anthropic>=0.40"]
+dev = ["pytest>=7"]
+
+[project.scripts]
+traceglass = "traceglass.cli:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/traceglass"]
+
+# The built UI is git-ignored; ship it in wheels/sdists anyway.
+[tool.hatch.build]
+artifacts = ["src/traceglass/_ui/**"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

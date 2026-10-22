@@ -1,0 +1,186 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://traceglass.dev/schema/v1/record.json",
+  "title": "Traceglass record (v1)",
+  "description": "One canonical record. Records are upserts keyed by id. Times are epoch milliseconds.",
+  "oneOf": [
+    { "$ref": "#/$defs/run" },
+    { "$ref": "#/$defs/span" },
+    { "$ref": "#/$defs/event" },
+    { "$ref": "#/$defs/artifact" },
+    { "$ref": "#/$defs/link" }
+  ],
+  "$defs": {
+    "time": { "type": ["number", "null"], "description": "epoch milliseconds" },
+    "payload": { "description": "Any JSON value, or a capture marker object with a \"$tg\" key." },
+    "marker": {
+      "type": "object",
+      "required": ["$tg"],
+      "properties": {
+        "$tg": { "enum": ["not_captured", "redacted", "truncated", "bytes", "repr"] },
+        "reason": { "type": "string" },
+        "preview": { "type": "string" },
+        "length": { "type": "integer" },
+        "size": { "type": "integer" },
+        "type": { "type": "string" },
+        "repr": { "type": "string" }
+      }
+    },
+    "status": { "enum": ["running", "ok", "error", "waiting", "cancelled", "skipped"] },
+    "anchor": {
+      "type": "object",
+      "properties": {
+        "start": { "type": "integer", "minimum": 0 },
+        "end": { "type": "integer", "minimum": 0 },
+        "text": { "type": "string" }
+      }
+    },
+    "ref": {
+      "type": "object",
+      "required": ["kind", "id"],
+      "properties": {
+        "kind": { "enum": ["span", "artifact"] },
+        "id": { "type": "string" },
+        "anchor": { "$ref": "#/$defs/anchor" }
+      }
+    },
+    "usage": {
+      "type": "object",
+      "properties": {
+        "input_tokens": { "type": "integer" },
+        "output_tokens": { "type": "integer" },
+        "total_tokens": { "type": "integer" },
+        "cache_read_tokens": { "type": "integer" },
+        "cache_write_tokens": { "type": "integer" },
+        "cost_usd": { "type": "number" }
+      }
+    },
+    "run": {
+      "type": "object",
+      "required": ["type", "id"],
+      "properties": {
+        "type": { "const": "run" },
+        "v": { "const": 1 },
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "project": { "type": ["string", "null"] },
+        "session": { "type": ["string", "null"] },
+        "task": { "type": ["string", "null"] },
+        "status": { "$ref": "#/$defs/status" },
+        "started_at": { "$ref": "#/$defs/time" },
+        "ended_at": { "$ref": "#/$defs/time" },
+        "input": { "$ref": "#/$defs/payload" },
+        "output": { "$ref": "#/$defs/payload" },
+        "final_artifact_id": { "type": "string" },
+        "tags": { "type": "array", "items": { "type": "string" } },
+        "metadata": { "type": "object" },
+        "source": { "type": "string" },
+        "sdk": { "type": "object" }
+      }
+    },
+    "span": {
+      "type": "object",
+      "required": ["type", "id", "run_id", "kind", "name", "status"],
+      "properties": {
+        "type": { "const": "span" },
+        "v": { "const": 1 },
+        "id": { "type": "string" },
+        "run_id": { "type": "string" },
+        "parent_id": { "type": ["string", "null"] },
+        "kind": {
+          "type": "string",
+          "description": "Known kinds: agent, llm, tool, retrieval, delegation, approval, guardrail, embedding, step. Unknown kinds render as step."
+        },
+        "name": { "type": "string" },
+        "status": { "$ref": "#/$defs/status" },
+        "started_at": { "$ref": "#/$defs/time" },
+        "ended_at": { "$ref": "#/$defs/time" },
+        "seq": { "type": ["integer", "null"] },
+        "agent": { "type": "string" },
+        "model": { "type": "string" },
+        "usage": { "$ref": "#/$defs/usage" },
+        "input": { "$ref": "#/$defs/payload" },
+        "output": { "$ref": "#/$defs/payload" },
+        "error": {
+          "type": "object",
+          "properties": { "type": { "type": "string" }, "message": { "type": "string" }, "stack": { "type": ["string", "null"] } }
+        },
+        "attributes": { "type": "object" },
+        "depends_on": { "type": "array", "items": { "type": "string" } },
+        "retry_of": { "type": "string" },
+        "attempt": { "type": "integer", "minimum": 1 }
+      }
+    },
+    "event": {
+      "type": "object",
+      "required": ["type", "id", "run_id", "kind", "name"],
+      "properties": {
+        "type": { "const": "event" },
+        "v": { "const": 1 },
+        "id": { "type": "string" },
+        "run_id": { "type": "string" },
+        "span_id": { "type": ["string", "null"] },
+        "kind": { "type": "string" },
+        "name": { "type": "string" },
+        "level": { "enum": ["debug", "info", "warning", "error"] },
+        "ts": { "$ref": "#/$defs/time" },
+        "message": { "type": "string" },
+        "data": { "$ref": "#/$defs/payload" }
+      }
+    },
+    "artifact": {
+      "type": "object",
+      "required": ["type", "id", "run_id", "kind", "name"],
+      "properties": {
+        "type": { "const": "artifact" },
+        "v": { "const": 1 },
+        "id": { "type": "string" },
+        "run_id": { "type": "string" },
+        "span_id": { "type": ["string", "null"] },
+        "kind": {
+          "type": "string",
+          "description": "Known kinds: answer, markdown, report, text, code, diff, json, document, file, image, table."
+        },
+        "name": { "type": "string" },
+        "content": { "$ref": "#/$defs/payload" },
+        "mime": { "type": "string" },
+        "uri": { "type": "string" },
+        "size": { "type": "integer" },
+        "created_at": { "$ref": "#/$defs/time" },
+        "final": { "type": "boolean" },
+        "previous_id": { "type": "string" },
+        "metadata": { "type": "object" },
+        "review": {
+          "type": "object",
+          "required": ["status"],
+          "properties": {
+            "status": { "type": "string", "description": "approved, rejected, needs_changes, unreviewed" },
+            "by": { "type": ["string", "null"] },
+            "note": { "type": ["string", "null"] },
+            "at": { "$ref": "#/$defs/time" }
+          }
+        }
+      }
+    },
+    "link": {
+      "type": "object",
+      "required": ["type", "id", "run_id", "subject", "evidence", "relation"],
+      "properties": {
+        "type": { "const": "link" },
+        "v": { "const": 1 },
+        "id": { "type": "string" },
+        "run_id": { "type": "string" },
+        "subject": { "$ref": "#/$defs/ref" },
+        "evidence": { "$ref": "#/$defs/ref" },
+        "relation": {
+          "type": "string",
+          "description": "Read as: subject <relation> evidence. Known: supported_by, contradicted_by, cites, derived_from, used, tested_by, revises."
+        },
+        "declared_by": { "enum": ["agent", "framework", "human"] },
+        "note": { "type": "string" },
+        "confidence": { "type": "number", "minimum": 0, "maximum": 1 },
+        "created_at": { "$ref": "#/$defs/time" }
+      }
+    }
+  }
+}

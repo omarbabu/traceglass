@@ -1,0 +1,42 @@
+{
+  "name": "@traceglass/sdk",
+  "version": "0.1.0",
+  "description": "TypeScript SDK for Traceglass — a visual, navigable record of how an AI agent arrived at an answer.",
+  "type": "module",
+  "license": "Apache-2.0",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
+  "sideEffects": false,
+  "keywords": [
+    "agents",
+    "llm",
+    "observability",
+    "tracing",
+    "provenance",
+    "visualization"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit && tsc -p tsconfig.examples.json",
+    "test": "vitest run",
+    "example": "npm run build && node --experimental-strip-types --no-warnings examples/node-agent.ts"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.5",
+    "typescript": "^5.9.3",
+    "vitest": "^3.2.7"
+  }
+}
