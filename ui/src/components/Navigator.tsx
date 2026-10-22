@@ -47,7 +47,17 @@ function RunRow({ r, active }: { r: Run; active: boolean }) {
   const color = act ? ACTIVITY[act].color : st.color;
   const live = r.status === "running" || act === "working";
   return (
-    <div className={`run-row ${active ? "active" : ""}`} onClick={() => openRun(r.id)} data-run={r.id}>
+    <div
+      className={`run-row ${active ? "active" : ""}`}
+      onClick={(e) => {
+        const s = useStore.getState();
+        // Shift-click a second run to compare it with the one that's open.
+        if (e.shiftKey && s.runId && s.runId !== r.id) s.openCompare(s.runId, r.id);
+        else openRun(r.id);
+      }}
+      title="Shift-click to compare with the open run"
+      data-run={r.id}
+    >
       <span className={`dot ${live ? "live" : ""}`} style={{ ["--c" as any]: color }} title={act ? ACTIVITY[act].hint : st.label} />
       <div className="grow">
         <div className="name" title={r.name}>

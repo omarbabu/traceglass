@@ -303,7 +303,7 @@ function Conversation({ m }: { m: GraphModel }) {
                 const said = textOf(sp.output).trim();
                 if (!said) return null;
                 return (
-                  <div key={sid} className={`conv-reply ${selected === sid ? "on" : ""}`} onClick={() => select(sid, { focus: true })}>
+                  <div key={sid} data-id={sid} className={`conv-reply ${selected === sid ? "on" : ""}`} onClick={() => select(sid, { focus: true })}>
                     {said.length > 700 ? said.slice(0, 700) + "…" : said}
                   </div>
                 );
@@ -313,6 +313,7 @@ function Conversation({ m }: { m: GraphModel }) {
               return (
                 <div
                   key={sid}
+                  data-id={sid}
                   className={`conv-step ${selected === sid ? "on" : ""} ${sp.status}`}
                   style={{ ["--c" as any]: k.color }}
                   onClick={() => select(sid, { focus: true })}
@@ -397,7 +398,7 @@ function FilesChanged({ m }: { m: GraphModel }) {
     <Section title={`Files changed · ${files.length}`}>
       <div className="ref-list">
         {files.slice(0, 12).map(([path, arts]) => (
-          <div key={path} className="file-row" title={path} onClick={() => select(arts[arts.length - 1].id, { focus: true })}>
+          <div key={path} className="file-row" data-path={short(path)} title={path} onClick={() => select(arts[arts.length - 1].id, { focus: true })}>
             <span className="ellipsis">{short(path)}</span>
             <span className="n">
               {arts.length} {arts.length === 1 ? "edit" : "edits"}

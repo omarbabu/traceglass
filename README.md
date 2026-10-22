@@ -13,6 +13,10 @@ reviewable record — execution graph, timeline, replay, and evidence you can cl
 
 </div>
 
+<a href="docs/media/traceglass-demo.mp4"><img src="docs/media/traceglass-demo.gif" alt="Traceglass: a real Claude Code session streaming in, a diff traced to the call that made it, and two models compared on the same task" /></a>
+
+<sub>▶ <a href="docs/media/traceglass-demo.mp4">Watch the 45-second demo</a> — a real Claude Code session (replayed at ~7×), reviewed, traced to evidence, and compared against the same task done by another model. Recorded with <code>scripts/video/make-demo.sh</code>.</sub>
+
 ![Selecting the final report traces it back through synthesis to the exact retrieved documents](docs/images/provenance.png)
 
 > Agent observability tells you **what ran**. Traceglass helps you **understand, navigate and review what happened** — and answer the question that matters when you review AI-generated work: *where did this come from?*
@@ -68,6 +72,7 @@ Records go to a local SQLite file (`~/.traceglass/traceglass.db`). The agent nev
 | **Rich artifacts** | Markdown with evidence highlights, unified diffs, code, JSON, retrieved passages, human review status. |
 | **Honest by construction** | *Not captured*, *redacted*, *truncated* and *empty* are four different things and the UI says which. Secrets are redacted before they leave the process. Evidence links are labelled as declared, not verified. |
 | **Shareable** | `traceglass export <run> -o run.html` writes one self-contained HTML file — attach it to a PR or incident; it opens offline. `--site` builds a static site for GitHub Pages. |
+| **Compare runs** | Two runs of the same task side by side — wall-clock time, model and tool calls, failures, tokens, cost, files changed, and timelines on one scale. Lower isn't automatically better; the trade-off stays visible instead of collapsing into one score. Shift-click a second run, or type “compare” in ⌘K. |
 | **Legible at scale** | 500+ step runs open with heavy subtrees collapsed, kind filters, and search — not a hairball. |
 
 <table>
@@ -193,6 +198,10 @@ docs/                    SPEC.md · schema.md · integrations.md
 - Run comparison (diff two runs of the same task) and evaluation overlays
 - Semantic search across run history
 - Pluggable storage backends for team deployments
+
+## Name
+
+*Traceglass* is a working name. Check GitHub, package registries, domains and trademarks before publishing under it.
 
 ## License
 

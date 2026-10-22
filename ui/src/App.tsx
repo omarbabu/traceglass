@@ -6,6 +6,7 @@ import { Inspector } from "./components/Inspector";
 import { Navigator } from "./components/Navigator";
 import { CommandPalette, HelpOverlay, Toast } from "./components/Overlays";
 import { ConnectPanel } from "./components/Connect";
+import { Compare } from "./components/Compare";
 import { Timeline } from "./components/Timeline";
 import {
   copyLink,
@@ -22,7 +23,9 @@ import { statusStyle } from "./model/kinds";
 import { ACTIVITY, sourceOf } from "./model/sources";
 import { runActivity } from "./types";
 import { SourceBadge } from "./components/Navigator";
-import { useStore } from "./store";
+import { parseHash, useStore } from "./store";
+import { TourLayer } from "./tour/TourLayer";
+import { mainTour } from "./tour/main";
 
 function TopBar() {
   const model = useStore((s) => s.model);
@@ -205,7 +208,7 @@ function useShortcuts() {
         " ": () => s.setPlaying(!s.playing),
         "?": () => s.set("helpOpen", true),
         "/": () => document.getElementById("run-search")?.focus(),
-        Escape: () => (s.replayT != null && !s.selected ? s.setReplay(null) : s.select(null)),
+        Escape: () => (s.compare ? s.closeCompare() : s.replayT != null && !s.selected ? s.setReplay(null) : s.select(null)),
       };
       const fn = map[e.key];
       if (fn) {
@@ -224,20 +227,26 @@ export default function App() {
   const loadingRun = useStore((s) => s.loadingRun);
   const showTimeline = useStore((s) => s.showTimeline);
   const showNavigator = useStore((s) => s.showNavigator);
+  const comparing = useStore((s) => s.compare !== null);
   useEffect(() => {
-    init();
+    const tour = parseHash(location.hash).tour;
+    init().then(() => {
+      if (tour === "main") mainTour();
+    });
   }, [init]);
   useShortcuts();
   useEffect(() => {
     document.title = model ? `${model.run.name} · Traceglass` : "Traceglass";
   }, [model]);
   return (
-    <div className={`app ${showNavigator ? "" : "no-nav"} ${model ? "" : "no-insp"}`}>
+    <div className={`app ${showNavigator ? "" : "no-nav"} ${model && !comparing ? "" : "no-insp"}`}>
       <TopBar />
       <Navigator />
       <main className="main">
         {loadingRun && <div className="loading-bar" />}
-        {model ? (
+        {comparing ? (
+          <Compare />
+        ) : model ? (
           <>
             <Canvas />
             {showTimeline && <Timeline />}
@@ -250,6 +259,7 @@ export default function App() {
       <CommandPalette />
       <HelpOverlay />
       <ConnectPanel />
+      <TourLayer />
       <Toast />
     </div>
   );

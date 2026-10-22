@@ -1,0 +1,32 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>virtual time test</title>
+<style>
+  body { margin: 0; background: #0f1014; color: #e7e8ec; font: 16px system-ui; width: 640px; height: 360px; overflow: hidden; }
+  .spin { position: absolute; left: 30px; top: 30px; width: 40px; height: 40px; border: 4px solid #8b90ff; border-top-color: transparent; border-radius: 50%; animation: spin 1s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  #fade { position: absolute; left: 120px; top: 30px; width: 80px; height: 40px; background: #56d68a; opacity: 0; transition: opacity 500ms linear; }
+  #fade.on { opacity: 1; }
+  #box { position: absolute; left: 0; top: 140px; width: 30px; height: 30px; background: #f5c451; }
+  #count, #date { position: absolute; left: 30px; font-family: monospace; }
+  #count { top: 220px; } #date { top: 260px; }
+</style></head>
+<body>
+<div class="spin"></div><div id="fade"></div><div id="box"></div><div id="count">0</div><div id="date"></div>
+<script>
+  window.__tgTour = { ready: false, done: false, duration: 2000 };
+  const V = 0.3; // px per ms
+  let t0 = null; window.__boxLog = [];
+  function frame(t) {
+    if (t0 === null) t0 = t;
+    const x = (t - t0) * V;
+    document.getElementById('box').style.transform = `translateX(${x}px)`;
+    window.__boxLog.push(x);
+    requestAnimationFrame(frame);
+  }
+  setTimeout(() => { window.__tgTour.ready = true; requestAnimationFrame(frame); }, 100);
+  setTimeout(() => document.getElementById('fade').classList.add('on'), 600);
+  let n = 0; setInterval(() => { document.getElementById('count').textContent = String(++n); }, 250);
+  setInterval(() => { document.getElementById('date').textContent = new Date().toISOString(); }, 100);
+  setTimeout(() => { window.__tgTour.done = true; }, 2100);
+</script>
+</body></html>

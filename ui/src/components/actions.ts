@@ -92,6 +92,7 @@ export function actions(): Action[] {
     { id: "copy", label: "Copy deep link", keys: "c", keywords: "share url", run: copyLink },
     { id: "help", label: "Keyboard shortcuts", keys: "?", run: () => s.set("helpOpen", true) },
     { id: "connect", label: "Connect Claude Code, Kiro and other agents", keywords: "watch hooks import sessions", pinned: true, run: () => s.set("connectOpen", true) },
+    { id: "compare", label: "Compare with another run…", keywords: "versus diff harness models cost speed", pinned: true, run: () => s.set("toast", "Type “compare” and a run name, or shift-click a run in the list") },
     { id: "follow", label: s.follow ? "Stop following the live run" : "Follow the live run", keywords: "live tail", run: () => s.set("follow", !s.follow) },
     ...(s.backend.exportUrl && s.runId
       ? [{ id: "export", label: "Download run as HTML", keywords: "export share offline", run: () => window.open(s.backend.exportUrl!(s.runId!), "_blank") }]

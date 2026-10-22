@@ -48,7 +48,7 @@ HOOK_ACTIVE_WINDOW_MS = 30 * 60 * 1000
 _DONE_STOP_REASONS = {"end_turn", "stop_sequence", "max_tokens", "refusal"}
 _INTERRUPT_PREFIX = "[Request interrupted"
 _CFG = CaptureConfig()
-_NOT_PROMPT_PREFIXES = ("<local-command-caveat>", "<local-command-stdout>", "<local-command-stderr>", "<system-reminder>")
+_NOT_PROMPT_PREFIXES = ("<task-notification>", "<local-command-caveat>", "<local-command-stdout>", "<local-command-stderr>", "<system-reminder>")
 _EDIT_TOOLS = {"Edit", "MultiEdit", "Write", "NotebookEdit"}
 _AGENT_TOOLS = {"Agent", "Task"}
 

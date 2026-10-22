@@ -1,0 +1,14 @@
+{
+  "name": "@traceglass/video",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "description": "Deterministic, virtual-time 60 fps screen recorder for Traceglass demo videos",
+  "scripts": {
+    "record": "node record.mjs",
+    "test": "node test/run-tests.mjs"
+  },
+  "dependencies": {
+    "playwright-core": "^1.64.1"
+  }
+}

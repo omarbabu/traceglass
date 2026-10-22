@@ -8,6 +8,8 @@ export interface Route {
   runId: string | null;
   node: string | null;
   t: number | null;
+  compare?: [string, string] | null;
+  tour?: string | null;
 }
 
 export function parseHash(hash: string): Route {
@@ -20,10 +22,13 @@ export function parseHash(hash: string): Route {
     runId: parts[0] === "run" ? parts[1] ?? null : null,
     node: parts[0] === "run" ? parts[2] ?? null : null,
     t: t != null && t !== "" && isFinite(Number(t)) ? Number(t) : null,
+    compare: parts[0] === "compare" && parts[1] && parts[2] ? [parts[1], parts[2]] : null,
+    tour: params.get("tour"),
   };
 }
 
 export function routeHash(r: Route): string {
+  if (r.compare) return `#/compare/${encodeURIComponent(r.compare[0])}/${encodeURIComponent(r.compare[1])}`;
   if (!r.runId) return "#/";
   let h = `#/run/${encodeURIComponent(r.runId)}`;
   if (r.node) h += `/${encodeURIComponent(r.node)}`;
@@ -63,6 +68,8 @@ interface State {
   helpOpen: boolean;
   connectOpen: boolean;
   runTab: string;
+  /** Two runs side by side (speed, tokens, tool calls, failures) — null when not comparing. */
+  compare: { ids: [string, string]; bundles: [Bundle, Bundle] | null } | null;
   toast: string | null;
   /** Bumped when the canvas should centre on the current selection. */
   focusTick: number;
@@ -72,6 +79,10 @@ interface State {
   refreshRuns(): Promise<void>;
   openRun(id: string | null, node?: string | null, t?: number | null): Promise<void>;
   select(id: string | null, opts?: { focus?: boolean; link?: string | null }): void;
+  openCompare(a: string, b: string): Promise<void>;
+  closeCompare(): void;
+  /** Show a bundle directly (no backend fetch) — used by the tour's live playback. */
+  loadBundle(bundle: Bundle): void;
   setHovered(id: string | null): void;
   toggleCollapsed(id: string): void;
   toggleSegment(segId: string, isLast: boolean): void;
@@ -118,6 +129,7 @@ export const useStore = create<State>((set, get) => ({
   helpOpen: false,
   connectOpen: false,
   runTab: "overview",
+  compare: null,
   toast: null,
   focusTick: 0,
   fitTick: 0,
@@ -135,11 +147,17 @@ export const useStore = create<State>((set, get) => ({
     const runs = get().runs;
     // Default to what's happening now: a session an agent is working in, else the newest run.
     const working = runs.find((r) => r.status === "running" || r.metadata?.["activity"] === "working");
-    const runId = route.runId ?? working?.id ?? runs[0]?.id ?? null;
+    const runId = route.runId ?? (route.compare ? route.compare[0] : null) ?? working?.id ?? runs[0]?.id ?? null;
     await get().openRun(runId, route.node, route.t);
+    if (route.compare) await get().openCompare(route.compare[0], route.compare[1]);
     window.addEventListener("hashchange", () => {
       const r = parseHash(location.hash);
       const s = get();
+      if (r.compare) {
+        if (s.compare?.ids[0] !== r.compare[0] || s.compare?.ids[1] !== r.compare[1]) s.openCompare(r.compare[0], r.compare[1]);
+        return;
+      }
+      if (s.compare) set({ compare: null });
       if (r.runId && r.runId !== s.runId) s.openRun(r.runId, r.node, r.t);
       else if (r.node !== s.selected) s.select(r.node, { focus: true });
     });
@@ -160,7 +178,7 @@ export const useStore = create<State>((set, get) => ({
       get().syncHash();
       return;
     }
-    set({ loadingRun: true, runId: id, playing: false, follow: true });
+    set({ loadingRun: true, runId: id, playing: false, follow: true, compare: null });
     const bundle = await get().backend.getRun(id);
     if (get().runId !== id) return; // superseded by a later navigation
     if (!bundle) {
@@ -184,6 +202,27 @@ export const useStore = create<State>((set, get) => ({
       focusTick: selected ? get().focusTick + 1 : get().focusTick,
     });
     get().syncHash();
+  },
+
+  async openCompare(a, b) {
+    set({ compare: { ids: [a, b], bundles: null }, playing: false });
+    get().syncHash();
+    const [ba, bb] = await Promise.all([get().backend.getRun(a), get().backend.getRun(b)]);
+    if (!ba || !bb) {
+      set({ compare: null, toast: "Couldn't load both runs" });
+      return;
+    }
+    if (get().compare?.ids[0] === a && get().compare?.ids[1] === b) set({ compare: { ids: [a, b], bundles: [ba, bb] } });
+  },
+
+  closeCompare() {
+    set({ compare: null });
+    get().syncHash();
+  },
+
+  loadBundle(bundle) {
+    const model = buildModel(bundle);
+    set({ runId: bundle.run.id, bundle, model, loadingRun: false, error: null });
   },
 
   select(id, opts = {}) {
@@ -298,8 +337,9 @@ export const useStore = create<State>((set, get) => ({
   },
 
   syncHash() {
-    const { runId, selected, replayT, model } = get();
-    const h = routeHash({ runId, node: selected, t: replayT != null && model ? replayT - model.t0 : null });
+    const { runId, selected, replayT, model, compare } = get();
+    if (new URLSearchParams(location.hash.split("?")[1] ?? "").get("tour")) return; // tours own the URL
+    const h = routeHash({ runId, node: selected, t: replayT != null && model ? replayT - model.t0 : null, compare: compare?.ids ?? null });
     if (h !== location.hash) history.replaceState(null, "", h);
   },
 }));

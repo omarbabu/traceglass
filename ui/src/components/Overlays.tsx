@@ -1,4 +1,4 @@
-import { ArrowRight, Command, Search, Star, TriangleAlert } from "lucide-react";
+import { ArrowRight, Command, Scale, Search, Star, TriangleAlert } from "lucide-react";
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { fmtRelative } from "../model/format";
 import { artifactIcon, spanKind, statusStyle } from "../model/kinds";
@@ -113,6 +113,16 @@ export function CommandPalette() {
     for (const r of runs) {
       if (r.id === s.runId) continue;
       const score = fuzzy(query, `${r.name} ${r.project ?? ""} ${r.id}`);
+      if (score > 0 && s.runId && /^comp|vs/.test(query.toLowerCase()))
+        out.push({
+          key: `cmp:${r.id}`,
+          section: "Compare with",
+          label: r.name,
+          detail: `${r.project ?? ""} · ${fmtRelative(r.started_at)}`,
+          icon: <Scale size={14} />,
+          run: () => s.openCompare(s.runId!, r.id),
+          score: score + 20,
+        });
       if (score > 0)
         out.push({
           key: `run:${r.id}`,
@@ -136,13 +146,13 @@ export function CommandPalette() {
         score: -10,
       });
     }
-    const order = ["In this run", "Actions", "Runs", "Across all runs"];
+    const order = ["Compare with", "In this run", "Actions", "Runs", "Across all runs"];
     const bySection = new Map<string, Item[]>();
     for (const it of out) {
       if (!bySection.has(it.section)) bySection.set(it.section, []);
       bySection.get(it.section)!.push(it);
     }
-    const limits: Record<string, number> = { "In this run": query ? 30 : 8, Actions: query ? 8 : 6, Runs: query ? 10 : 6, "Across all runs": 12 };
+    const limits: Record<string, number> = { "Compare with": 8, "In this run": query ? 30 : 8, Actions: query ? 8 : 6, Runs: query ? 10 : 6, "Across all runs": 12 };
     return order.flatMap((sec) => (bySection.get(sec) ?? []).sort((a, b) => b.score - a.score).slice(0, limits[sec]));
   }, [q, model, runs, remote]);
 

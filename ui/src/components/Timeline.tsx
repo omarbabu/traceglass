@@ -10,8 +10,9 @@ const SPEEDS = [1, 4, 8, 32];
 
 function niceStep(totalMs: number, target = 8): number {
   const raw = totalMs / target;
-  const steps = [10, 25, 50, 100, 250, 500, 1000, 2000, 5000, 10000, 15000, 30000, 60000, 120000, 300000, 600000, 1800000, 3600000];
-  return steps.find((s) => s >= raw) ?? 3600000;
+  const steps = [10, 25, 50, 100, 250, 500, 1000, 2000, 5000, 10000, 15000, 30000, 60000, 120000, 300000, 600000, 1800000, 3600000,
+    7200000, 10800000, 21600000, 43200000, 86400000, 172800000, 604800000];
+  return steps.find((s) => s >= raw) ?? 604800000;
 }
 
 export function Timeline() {
@@ -73,7 +74,7 @@ export function Timeline() {
     if (i < 0) return;
     const el = bodyRef.current;
     const top = 24 + i * 24;
-    if (top < el.scrollTop + 24 || top > el.scrollTop + el.clientHeight - 30) el.scrollTo({ top: top - el.clientHeight / 2, behavior: "smooth" });
+    if (top < el.scrollTop + 24 || top > el.scrollTop + el.clientHeight - 30) el.scrollTo({ top: top - el.clientHeight / 2, behavior: document.body.classList.contains("touring") ? "auto" : "smooth" });
   }, [selected, rows]);
 
   if (!model) return null;
